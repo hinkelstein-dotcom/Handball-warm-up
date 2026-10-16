@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Handball warm Up</title>
+<style>
+:root{color-scheme:dark;--bg:#101114;--panel:#1b1d22;--line:#30333a;--muted:#a7abb4;--accent:#39d98a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f5f6f7;font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:760px;margin:auto;padding:24px 16px 48px}
+header{padding:24px 20px;background:linear-gradient(135deg,#20252a,#172a24);border:1px solid var(--line);border-radius:20px;margin-bottom:18px}
+h1{font-size:clamp(26px,5vw,38px);line-height:1.1;margin:0 0 8px}p{margin:6px 0;color:var(--muted)}
+.topline{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.pill{border:1px solid #41464e;border-radius:999px;padding:6px 10px;font-size:13px;color:#dfe4e8}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+button{font:inherit;cursor:pointer;border:0;border-radius:11px;padding:10px 13px;font-weight:650}
+.primary{background:var(--accent);color:#07130d}.secondary{background:#2a2d34;color:#f5f6f7;border:1px solid #424650}
+.song{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin:9px 0}
+.song input{width:19px;height:19px;accent-color:var(--accent)}
+.title{font-weight:700}.artist{font-size:14px;color:var(--muted);margin-top:2px}
+.play{background:#292d32;color:#e8fff2;border:1px solid #41464e;white-space:nowrap}
+.play:hover,.secondary:hover{border-color:var(--accent)}
+footer{margin-top:18px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+#result{display:none;margin-top:12px;padding:14px;border:1px solid #3c7657;border-radius:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+small{color:var(--muted)}a{color:var(--accent)}
+@media(max-width:480px){.song{grid-template-columns:24px 1fr}.play{grid-column:2;justify-self:start;padding:8px 11px}.song{gap:8px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>🤾 Handball warm Up</h1>
+  <p>Hör kurz rein und wähle alle Songs aus, die deine Stimme bekommen sollen.</p>
+  <div class="topline"><span class="pill">16 Songs</span><span class="pill">Mehrfachauswahl erlaubt</span><span class="pill" id="counter">0 ausgewählt</span></div>
+</header>
+<div class="controls">
+  <button class="secondary" id="selectAll">Alle auswählen</button>
+  <button class="secondary" id="clear">Auswahl löschen</button>
+</div>
+<section id="songs"></section>
+<footer>
+  <strong>Deine Auswahl</strong>
+  <p>Wenn du fertig bist, erstelle deine Stimmenliste. Du kannst sie kopieren und in die WhatsApp-Gruppe schicken.</p>
+  <div class="controls"><button class="primary" id="submit">Stimmenliste erstellen</button><button class="secondary" id="copy" style="display:none">Liste kopieren</button></div>
+  <div id="result" aria-live="polite"></div>
+  <small>Die Hörbuttons öffnen eine YouTube-Suche zum jeweiligen Song. Diese Datei ist eine Vorlage: Stimmen werden noch nicht zentral gesammelt. Für gemeinsame Ergebnisse muss ein Abstimmungsdienst eingerichtet und die Seite veröffentlicht werden.</small>
+</footer>
+</main>
+<script>
+const songs = [
+["Makina Time","Dimitri Vegas & Like Mike (laut Screenshot teilweise abgeschnitten)"],
+["Bleed It Out","Linkin Park"],
+["Till I Collapse","Eminem"],
+["Eye of the Tiger","Survivor"],
+["Satellite","Rise Against"],
+["Last Resort","Papa Roach"],
+["Still Waiting","Sum 41"],
+["Red Flag","Billy Talent"],
+["Fallen Leaves","Billy Talent"],
+["Self Esteem","The Offspring"],
+["Rollin' (Air Raid Vehicle)","Limp Bizkit"],
+["Rusted From the Rain","Billy Talent"],
+["Kind Eines Teufels","Jebroer, Paul Elstak"],
+["The Emptiness Machine","Linkin Park"],
+["A Place for My Head","Linkin Park"],
+["A Warrior's Call","Volbeat"]
+];
+const section=document.getElementById('songs');
+songs.forEach((song,i)=>{
+ const row=document.createElement('label'); row.className='song';
+ const cb=document.createElement('input'); cb.type='checkbox'; cb.value=String(i);
+ cb.addEventListener('change',updateCount);
+ const info=document.createElement('span');
+ const title=document.createElement('span'); title.className='title'; title.textContent=song[0];
+ const artist=document.createElement('div'); artist.className='artist'; artist.textContent=song[1];
+ info.append(title,artist);
+ const play=document.createElement('button'); play.type='button'; play.className='play'; play.textContent='▶ Hör rein';
+ play.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();window.open('https://www.youtube.com/results?search_query='+encodeURIComponent(song[0]+' '+song[1]),'_blank','noopener');});
+ row.append(cb,info,play); section.append(row);
+});
+function boxes(){return [...document.querySelectorAll('.song input')]}
+function updateCount(){const n=boxes().filter(x=>x.checked).length;document.getElementById('counter').textContent=n+' ausgewählt';}
+document.getElementById('selectAll').onclick=()=>{boxes().forEach(x=>x.checked=true);updateCount()};
+document.getElementById('clear').onclick=()=>{boxes().forEach(x=>x.checked=false);updateCount();document.getElementById('result').style.display='none';document.getElementById('copy').style.display='none'};
+let voteText='';
+document.getElementById('submit').onclick=()=>{
+ const chosen=boxes().filter(x=>x.checked).map(x=>songs[Number(x.value)]);
+ if(!chosen.length){alert('Wähle bitte mindestens einen Song aus.');return}
+ voteText='Meine Stimmen bei Handball warm Up:\\n'+chosen.map(s=>'• '+s[0]+' – '+s[1]).join('\\n');
+ const result=document.getElementById('result');result.textContent=voteText;result.style.display='block';
+ document.getElementById('copy').style.display='inline-block';
+};
+document.getElementById('copy').onclick=async()=>{
+ try{await navigator.clipboard.writeText(voteText);document.getElementById('copy').textContent='Kopiert ✓'}
+ catch(e){const t=document.createElement('textarea');t.value=voteText;document.body.append(t);t.select();document.execCommand('copy');t.remove();document.getElementById('copy').textContent='Kopiert ✓'}
+};
+</script>
+</body>
+</html>
